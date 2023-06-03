@@ -260,7 +260,7 @@ paket-files/
 __pycache__/
 *.pyc
 
-_build_GCCODECORRECTOR_VS16/*
-_build_GCCODECORRECTOR_NMake_VS16/*
+_build_GCODECORRECTOR_VS17/*
+_build_GCODECORRECTOR_NMake_VS17/*
 
 **/*.Generated.cs
