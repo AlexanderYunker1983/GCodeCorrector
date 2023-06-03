@@ -5,6 +5,10 @@ VisualStudioVersion = 17.5.33627.172
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GCodeCorrector", "GCodeCorrector\GCodeCorrector.csproj", "{2D8946F5-1B51-40A9-9220-412213CFE88E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YLocalization", "YLocalization\YLocalization.csproj", "{2A9ACFC9-60AC-497F-AFCC-2DC6D98D080B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YMugenExtensions", "YMugenExtensions\YMugenExtensions.csproj", "{EE06B5ED-3BFE-4A41-9040-81EA9D821CFA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{2D8946F5-1B51-40A9-9220-412213CFE88E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D8946F5-1B51-40A9-9220-412213CFE88E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D8946F5-1B51-40A9-9220-412213CFE88E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A9ACFC9-60AC-497F-AFCC-2DC6D98D080B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A9ACFC9-60AC-497F-AFCC-2DC6D98D080B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A9ACFC9-60AC-497F-AFCC-2DC6D98D080B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A9ACFC9-60AC-497F-AFCC-2DC6D98D080B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE06B5ED-3BFE-4A41-9040-81EA9D821CFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE06B5ED-3BFE-4A41-9040-81EA9D821CFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE06B5ED-3BFE-4A41-9040-81EA9D821CFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE06B5ED-3BFE-4A41-9040-81EA9D821CFA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
