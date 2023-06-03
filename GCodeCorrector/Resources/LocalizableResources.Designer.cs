@@ -61,11 +61,83 @@ namespace GCodeCorrector.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Поток на сокращаемом участке:.
+        /// </summary>
+        internal static string EndLineCount {
+            get {
+                return ResourceManager.GetString("EndLineCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Длина сокращаемого участка, мм:.
+        /// </summary>
+        internal static string EndLineSize {
+            get {
+                return ResourceManager.GetString("EndLineSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Открыть файл.
+        /// </summary>
+        internal static string OpenFile {
+            get {
+                return ResourceManager.GetString("OpenFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Выберете файл gcode для коррекции.
+        /// </summary>
+        internal static string OpenFileTitle {
+            get {
+                return ResourceManager.GetString("OpenFileTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Корректор g-code файлов.
         /// </summary>
         internal static string ProgramTitle {
             get {
                 return ResourceManager.GetString("ProgramTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Обработать и сохранить файл.
+        /// </summary>
+        internal static string SaveFile {
+            get {
+                return ResourceManager.GetString("SaveFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Выберете куда сохранить обработанный файл.
+        /// </summary>
+        internal static string SaveFileTitle {
+            get {
+                return ResourceManager.GetString("SaveFileTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Сохранение результатов.
+        /// </summary>
+        internal static string Saving {
+            get {
+                return ResourceManager.GetString("Saving", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Файл успешно сохранён.
+        /// </summary>
+        internal static string SuccessfullySaved {
+            get {
+                return ResourceManager.GetString("SuccessfullySaved", resourceCulture);
             }
         }
     }

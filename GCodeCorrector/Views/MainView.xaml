@@ -4,11 +4,52 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GCodeCorrector.ViewModels"
+        xmlns:fa5="http://schemas.fontawesome.com/icons/"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance viewModels:MainViewModel}"
         Title="{DataBinding DisplayName}"
         Height="450" Width="800">
     <Grid Margin="11">
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left">
+            <Button Command="{DataBinding OpenFileCommand}">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <fa5:ImageAwesome Height="24" Margin="3" Icon="Regular_FileAlt" VerticalAlignment="Center"/>
+                        <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.OpenFile'}"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
+            <TextBlock VerticalAlignment="Center" Text="{Binding SelectedFile}" Margin="11,0,0,0"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
+            <Button Command="{DataBinding SaveFileCommand}">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <fa5:ImageAwesome Height="24" Margin="3" Icon="Regular_Save" VerticalAlignment="Center"/>
+                        <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.SaveFile'}"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
+            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineSize'}"/>
+            <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding EndLineSize}" VerticalAlignment="Center"
+                    Margin="6,0"/>
+            <TextBlock VerticalAlignment="Center" Text="{Binding EndLineSize, StringFormat={}{0:F3}}"/>
+        </StackPanel>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
+            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}"/>
+            <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding EndLineCount}" VerticalAlignment="Center"
+                    Margin="6,0"/>
+            <TextBlock VerticalAlignment="Center" Text="{Binding EndLineCount, StringFormat={}{0:F3}}"/>
+        </StackPanel>
     </Grid>
 </Window>

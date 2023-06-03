@@ -117,7 +117,31 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="EndLineCount" xml:space="preserve">
+    <value>Поток на сокращаемом участке:</value>
+  </data>
+  <data name="EndLineSize" xml:space="preserve">
+    <value>Длина сокращаемого участка, мм:</value>
+  </data>
+  <data name="OpenFile" xml:space="preserve">
+    <value>Открыть файл</value>
+  </data>
+  <data name="OpenFileTitle" xml:space="preserve">
+    <value>Выберете файл gcode для коррекции</value>
+  </data>
   <data name="ProgramTitle" xml:space="preserve">
     <value>Корректор g-code файлов</value>
+  </data>
+  <data name="SaveFile" xml:space="preserve">
+    <value>Обработать и сохранить файл</value>
+  </data>
+  <data name="SaveFileTitle" xml:space="preserve">
+    <value>Выберете куда сохранить обработанный файл</value>
+  </data>
+  <data name="Saving" xml:space="preserve">
+    <value>Сохранение результатов</value>
+  </data>
+  <data name="SuccessfullySaved" xml:space="preserve">
+    <value>Файл успешно сохранён</value>
   </data>
 </root>
