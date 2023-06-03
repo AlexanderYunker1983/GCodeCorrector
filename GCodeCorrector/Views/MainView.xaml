@@ -15,6 +15,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -40,12 +42,25 @@
             </Button>
         </StackPanel>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
+            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.StartLineSize'}"/>
+            <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding StartLineSize}" VerticalAlignment="Center"
+                    Margin="6,0"/>
+            <TextBlock VerticalAlignment="Center" Text="{Binding StartLineSize, StringFormat={}{0:F3}}"/>
+        </StackPanel>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
+            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.StartLineCount'}"/>
+            <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding StartLineCount}" VerticalAlignment="Center"
+                    Margin="6,0"/>
+            <TextBlock VerticalAlignment="Center" Text="{Binding StartLineCount, StringFormat={}{0:F3}}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
             <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineSize'}"/>
             <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding EndLineSize}" VerticalAlignment="Center"
                     Margin="6,0"/>
             <TextBlock VerticalAlignment="Center" Text="{Binding EndLineSize, StringFormat={}{0:F3}}"/>
         </StackPanel>
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
             <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}"/>
             <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding EndLineCount}" VerticalAlignment="Center"
                     Margin="6,0"/>

@@ -133,6 +133,24 @@ namespace GCodeCorrector.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Поток в начале линии на сокращаемом участке:.
+        /// </summary>
+        internal static string StartLineCount {
+            get {
+                return ResourceManager.GetString("StartLineCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Длина сокращаемого участка в начале линии, мм:.
+        /// </summary>
+        internal static string StartLineSize {
+            get {
+                return ResourceManager.GetString("StartLineSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Файл успешно сохранён.
         /// </summary>
         internal static string SuccessfullySaved {

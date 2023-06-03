@@ -24,7 +24,9 @@ namespace GCodeCorrector.ViewModels
         private string _selectedFile;
         private string _selectedFileName;
         private double _endLineSize = 0.4;
-        private double _endLineCount = 0.7;
+        private double _endLineCount = 0.8;
+        private double _startLineSize = 0.4;
+        private double _startLineCount = 0.6;
 
         public MainViewModel(ILocalizationManager localizationManager)
         {
@@ -58,6 +60,28 @@ namespace GCodeCorrector.ViewModels
             }
         }
 
+        public double StartLineSize
+        {
+            get => _startLineSize;
+            set
+            {
+                if (value.Equals(_startLineSize)) return;
+                _startLineSize = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double StartLineCount
+        {
+            get => _startLineCount;
+            set
+            {
+                if (value.Equals(_startLineCount)) return;
+                _startLineCount = value;
+                OnPropertyChanged();
+            }
+        }
+
         private void PrepareCommands()
         {
             OpenFileCommand = new AsyncYRelayCommand(OnOpenFile);
@@ -67,12 +91,11 @@ namespace GCodeCorrector.ViewModels
         private Task OnSaveFile()
         {
             var dir = Path.GetDirectoryName(SelectedFile);
-            var newFile = string.Empty;
             var sfd = new SaveFileDialog
             {
                 Filter = "gcode|*.gcode",
                 Title = _localizationManager.GetString("SaveFileTitle"),
-                InitialDirectory = dir,
+                InitialDirectory = dir ?? string.Empty,
                 FileName = $"new_{_selectedFileName}"
             };
 
@@ -81,35 +104,45 @@ namespace GCodeCorrector.ViewModels
                 return Empty.Task;
             }
 
-            newFile = sfd.FileName;
-
+            var newFile = sfd.FileName;
             var code = File.ReadAllLines(SelectedFile);
+
+            var newCode = CorrectEndOfLines(code);
+            var finalCode = CorrectStartOfLines(newCode.ToArray());
+
+            File.WriteAllLines(newFile, finalCode);
+
+            MessageBox.Show(_localizationManager.GetString("SuccessfullySaved"),
+                _localizationManager.GetString("Saving"), MessageBoxButton.OK, MessageBoxImage.None);
+
+            return Empty.Task;
+        }
+
+        private IEnumerable<string> CorrectStartOfLines(string[] code)
+        {
             var newCode = new List<string>();
             var prevX = double.NegativeInfinity;
             var prevY = double.NegativeInfinity;
-            var prevE = double.NegativeInfinity;
+
             for (var i = 0; i < code.Length; i++)
             {
                 var line = code[i];
-                if (!line.StartsWith("G1") || double.IsNegativeInfinity(prevX) || double.IsNegativeInfinity(prevY) || double.IsNegativeInfinity(prevE))
+                if (!line.StartsWith("G1") || double.IsNegativeInfinity(prevX) || double.IsNegativeInfinity(prevY))
                 {
                     newCode.Add(line);
                     if (line.StartsWith("G92") || line.StartsWith("G0") || line.StartsWith("G1"))
                     {
-                        ParsePrevData(line, ref prevX, ref prevY, ref prevE);
+                        ParsePrevData(line, ref prevX, ref prevY);
                     }
 
                     continue;
                 }
 
                 var parts = line.Split(' ');
-                var x = double.NegativeInfinity;
-                var y = double.NegativeInfinity;
-                var e = double.NegativeInfinity;
                 if (parts.Any(p => p.StartsWith("Z")))
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE);
+                    ParsePrevData(line, ref prevX, ref prevY);
                     continue;
                 }
 
@@ -117,58 +150,161 @@ namespace GCodeCorrector.ViewModels
                 var yPart = parts.FirstOrDefault(p => p.StartsWith("Y"));
                 var ePart = parts.FirstOrDefault(p => p.StartsWith("E"));
 
-                var xExist = false;
-                var yExist = false;
-
-                if (xPart != null)
-                {
-                    x = double.Parse(xPart.Substring(1).TrimEnd(';'));
-                }
-                else
-                {
-                    x = prevX;
-                }
-                if (yPart != null)
-                {
-                    y = double.Parse(yPart.Substring(1).TrimEnd(';'));
-                }
-                else
-                {
-                    y = prevY;
-                }
-
-                if (ePart != null)
-                {
-                    e = double.Parse(ePart.Substring(1).TrimEnd(';'));
-                }
+                var x = xPart != null ? double.Parse(xPart.Substring(1).TrimEnd(';')) : prevX;
+                var y = yPart != null ? double.Parse(yPart.Substring(1).TrimEnd(';')) : prevY;
+                var e = ePart != null ? double.Parse(ePart.Substring(1).TrimEnd(';')) : 0.0;
 
                 if (e < 0)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE);
+                    ParsePrevData(line, ref prevX, ref prevY);
                     continue;
                 }
+
                 var deltaX = x - prevX;
                 var deltaY = y - prevY;
-                var extrusion = e - prevE;
                 var delta = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+
+                if (delta < StartLineSize)
+                {
+                    newCode.Add(line);
+                    ParsePrevData(line, ref prevX, ref prevY);
+                    continue;
+                }
+
+                if (i < 1)
+                {
+                    newCode.Add(line);
+                    ParsePrevData(line, ref prevX, ref prevY);
+                    continue;
+                }
+
+                var counter = -1;
+                var codeFounded = false;
+                var prevCommand = string.Empty;
+
+                while (counter + i >= 0)
+                {
+                    prevCommand = code[i + counter];
+                    if (!(prevCommand.StartsWith("G") || prevCommand.StartsWith("M")))
+                    {
+                        counter--;
+                        continue;
+                    }
+
+                    if (prevCommand.StartsWith("G1"))
+                    {
+                        codeFounded = true;
+                    }
+
+                    break;
+                }
+
+                if (!codeFounded)
+                {
+                    newCode.Add(line);
+                    ParsePrevData(line, ref prevX, ref prevY);
+                    continue;
+                }
+
+                var partsToRem = prevCommand.Split(' ');
+                var eRemPart = partsToRem.FirstOrDefault(p => p.StartsWith("E"));
+
+                if (eRemPart == null)
+                {
+                    newCode.Add(line);
+                    ParsePrevData(line, ref prevX, ref prevY);
+                    continue;
+                }
+
+                var devider = (delta - StartLineSize) / delta;
+                var newDeltaX = deltaX * devider;
+                var newDeltaY = deltaY * devider;
+                var startX = deltaX - newDeltaX;
+                var startY = deltaY - newDeltaY;
+                var newExtrusion = e * devider;
+                var startExtrusion = (e - newExtrusion) * StartLineCount;
+
+                var startCode = $"G1 X{prevX + startX} Y{prevY + startY} E{startExtrusion}";
+                newCode.Add(startCode);
+
+                var cuttedLine = $"G1 X{prevX + newDeltaX + startX} Y{prevY + newDeltaY + startY} E{newExtrusion}";
+                newCode.Add(cuttedLine);
+
+                
+
+                ParsePrevData(cuttedLine, ref prevX, ref prevY);
+            }
+
+            return newCode;
+        }
+
+        private IEnumerable<string> CorrectEndOfLines(string[] code)
+        {
+            var newCode = new List<string>();
+
+            var prevX = double.NegativeInfinity;
+            var prevY = double.NegativeInfinity;
+
+            for (var i = 0; i < code.Length; i++)
+            {
+                var line = code[i];
+                if (!line.StartsWith("G1") || double.IsNegativeInfinity(prevX) || double.IsNegativeInfinity(prevY))
+                {
+                    newCode.Add(line);
+                    if (line.StartsWith("G92") || line.StartsWith("G0") || line.StartsWith("G1"))
+                    {
+                        ParsePrevData(line, ref prevX, ref prevY);
+                    }
+
+                    continue;
+                }
+
+                var parts = line.Split(' ');
+                if (parts.Any(p => p.StartsWith("Z")))
+                {
+                    newCode.Add(line);
+                    ParsePrevData(line, ref prevX, ref prevY);
+                    continue;
+                }
+
+                var xPart = parts.FirstOrDefault(p => p.StartsWith("X"));
+                var yPart = parts.FirstOrDefault(p => p.StartsWith("Y"));
+                var ePart = parts.FirstOrDefault(p => p.StartsWith("E"));
+
+                var x = xPart != null ? double.Parse(xPart.Substring(1).TrimEnd(';')) : prevX;
+                var y = yPart != null ? double.Parse(yPart.Substring(1).TrimEnd(';')) : prevY;
+                var e = ePart != null ? double.Parse(ePart.Substring(1).TrimEnd(';')) : 0.0;
+
+                if (e < 0)
+                {
+                    newCode.Add(line);
+                    ParsePrevData(line, ref prevX, ref prevY);
+                    continue;
+                }
+
+                var deltaX = x - prevX;
+                var deltaY = y - prevY;
+                var delta = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+
                 if (delta < EndLineSize)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE);
+                    ParsePrevData(line, ref prevX, ref prevY);
                     continue;
                 }
 
-                if (i >= code.Length)
+                if (i >= code.Length - 1)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE);
+                    ParsePrevData(line, ref prevX, ref prevY);
                     continue;
                 }
 
-                var counter = 0;
+                var counter = 1;
                 var codeFounded = false;
                 var nextCommand = string.Empty;
+
                 while (counter + i < code.Length)
                 {
                     nextCommand = code[i + counter];
@@ -184,13 +320,12 @@ namespace GCodeCorrector.ViewModels
                     }
 
                     break;
-
                 }
 
                 if (!codeFounded)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE);
+                    ParsePrevData(line, ref prevX, ref prevY);
                     continue;
                 }
 
@@ -200,7 +335,7 @@ namespace GCodeCorrector.ViewModels
                 if (eRemPart == null)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE);
+                    ParsePrevData(line, ref prevX, ref prevY);
                     continue;
                 }
 
@@ -209,24 +344,19 @@ namespace GCodeCorrector.ViewModels
                 var newDeltaY = deltaY * devider;
                 var endX = deltaX - newDeltaX;
                 var endY = deltaY - newDeltaY;
-                var newExtrusion = extrusion * devider;
-                var endExtrusion = (extrusion - newExtrusion) * EndLineCount;
+                var newExtrusion = e * devider;
+                var endExtrusion = (e - newExtrusion) * EndLineCount;
 
-                var cuttedLine = $"G1 X{prevX + newDeltaX} Y{prevY + newDeltaY} E{prevE + newExtrusion}";
+                var cuttedLine = $"G1 X{prevX + newDeltaX} Y{prevY + newDeltaY} E{newExtrusion}";
                 newCode.Add(cuttedLine);
 
                 var endCode = $"G1 X{prevX + newDeltaX + endX} Y{prevY + newDeltaY + endY} E{endExtrusion}";
                 newCode.Add(endCode);
 
-                ParsePrevData(endCode, ref prevX, ref prevY, ref prevE);
+                ParsePrevData(endCode, ref prevX, ref prevY);
             }
 
-            File.WriteAllLines(newFile, newCode);
-
-            MessageBox.Show(_localizationManager.GetString("SuccessfullySaved"),
-                _localizationManager.GetString("Saving"), MessageBoxButton.OK, MessageBoxImage.None);
-
-            return Empty.Task;
+            return newCode;
         }
 
         private bool OnCanSaveFile()
@@ -264,64 +394,38 @@ namespace GCodeCorrector.ViewModels
             return Empty.Task;
         }
 
-        private static void ParsePrevData(string line, ref double prevX, ref double prevY, ref double prevE)
+        private static void ParsePrevData(string line, ref double prevX, ref double prevY)
         {
             var partsToRem = line.Split(' ');
             var xRemPart = partsToRem.FirstOrDefault(p => p.StartsWith("X"));
-            var yRemPart = partsToRem.FirstOrDefault(p => p.StartsWith("Y"));
-            var eRemPart = partsToRem.FirstOrDefault(p => p.StartsWith("E"));
             if (xRemPart != null)
             {
-                var substring = xRemPart.Substring(1).TrimEnd(';');
-                if (substring.StartsWith("-"))
-                {
-                    var sss = substring.Substring(1);
-
-                    if (sss.StartsWith("."))
-                    {
-                        sss = $"0{sss}";
-                    }
-
-                    substring = $"-{sss}";
-                }
-                prevX = double.Parse(substring);
+                ParseStringPartWithCorrection(out prevX, xRemPart);
             }
 
+            var yRemPart = partsToRem.FirstOrDefault(p => p.StartsWith("Y"));
             if (yRemPart != null)
             {
-                var substring = yRemPart.Substring(1).TrimEnd(';');
-                if (substring.StartsWith("-"))
-                {
-                    var sss = substring.Substring(1);
-
-                    if (sss.StartsWith("."))
-                    {
-                        sss = $"0{sss}";
-                    }
-
-                    substring = $"-{sss}";
-                }
-                prevY = double.Parse(substring);
+                ParseStringPartWithCorrection(out prevY, yRemPart);
             }
+        }
 
-            if (eRemPart != null)
+        private static void ParseStringPartWithCorrection(out double data, string part)
+        {
+            var substring = part.Substring(1).TrimEnd(';');
+            if (substring.StartsWith("-"))
             {
-                var substring = eRemPart.Substring(1).TrimEnd(';');
-                if (substring.StartsWith("-"))
-                {
-                    var sss = substring.Substring(1);
-                    
-                    if (sss.StartsWith("."))
-                    {
-                        sss = $"0{sss}";
-                    }
+                var sss = substring.Substring(1);
 
-                    substring = $"-{sss}";
+                if (sss.StartsWith("."))
+                {
+                    sss = $"0{sss}";
                 }
-                prevE = double.Parse(substring);
+
+                substring = $"-{sss}";
             }
 
-            prevE = 0;
+            data = double.Parse(substring);
         }
 
         public ICommand OpenFileCommand { get; set; }

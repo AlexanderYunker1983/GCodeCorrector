@@ -141,6 +141,12 @@
   <data name="Saving" xml:space="preserve">
     <value>Сохранение результатов</value>
   </data>
+  <data name="StartLineCount" xml:space="preserve">
+    <value>Поток в начале линии на сокращаемом участке:</value>
+  </data>
+  <data name="StartLineSize" xml:space="preserve">
+    <value>Длина сокращаемого участка в начале линии, мм:</value>
+  </data>
   <data name="SuccessfullySaved" xml:space="preserve">
     <value>Файл успешно сохранён</value>
   </data>
