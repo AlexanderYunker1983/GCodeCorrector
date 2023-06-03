@@ -70,11 +70,47 @@ namespace GCodeCorrector.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Обработка конца линии включена.
+        /// </summary>
+        internal static string EndLineEnabled {
+            get {
+                return ResourceManager.GetString("EndLineEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Параметры обработки конца линии.
+        /// </summary>
+        internal static string EndLineParams {
+            get {
+                return ResourceManager.GetString("EndLineParams", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Длина сокращаемого участка, мм:.
         /// </summary>
         internal static string EndLineSize {
             get {
                 return ResourceManager.GetString("EndLineSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ошибка.
+        /// </summary>
+        internal static string Error {
+            get {
+                return ResourceManager.GetString("Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Не удалось сохранить данные в файл.
+        /// </summary>
+        internal static string ErrorDuringRecordingToFile {
+            get {
+                return ResourceManager.GetString("ErrorDuringRecordingToFile", resourceCulture);
             }
         }
         
@@ -133,20 +169,20 @@ namespace GCodeCorrector.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Поток в начале линии на сокращаемом участке:.
+        ///   Looks up a localized string similar to Обработка начала линии включена.
         /// </summary>
-        internal static string StartLineCount {
+        internal static string StartLineEnabled {
             get {
-                return ResourceManager.GetString("StartLineCount", resourceCulture);
+                return ResourceManager.GetString("StartLineEnabled", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Длина сокращаемого участка в начале линии, мм:.
+        ///   Looks up a localized string similar to Параметры обработки начала линии.
         /// </summary>
-        internal static string StartLineSize {
+        internal static string StartLineParams {
             get {
-                return ResourceManager.GetString("StartLineSize", resourceCulture);
+                return ResourceManager.GetString("StartLineParams", resourceCulture);
             }
         }
         
@@ -156,6 +192,15 @@ namespace GCodeCorrector.Resources {
         internal static string SuccessfullySaved {
             get {
                 return ResourceManager.GetString("SuccessfullySaved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to В исходном gcode используется относительное экструдирование.
+        /// </summary>
+        internal static string UseRelativeExtrusion {
+            get {
+                return ResourceManager.GetString("UseRelativeExtrusion", resourceCulture);
             }
         }
     }

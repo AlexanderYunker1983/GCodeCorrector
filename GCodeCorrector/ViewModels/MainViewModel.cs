@@ -27,6 +27,9 @@ namespace GCodeCorrector.ViewModels
         private double _endLineCount = 0.8;
         private double _startLineSize = 0.4;
         private double _startLineCount = 0.6;
+        private bool _startLineEnabled = false;
+        private bool _endLineEnabled = true;
+        private bool _useRelativeExtrusion = true;
 
         public MainViewModel(ILocalizationManager localizationManager)
         {
@@ -36,6 +39,39 @@ namespace GCodeCorrector.ViewModels
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             
             PrepareCommands();
+        }
+
+        public bool EndLineEnabled
+        {
+            get => _endLineEnabled;
+            set
+            {
+                if (value == _endLineEnabled) return;
+                _endLineEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool StartLineEnabled
+        {
+            get => _startLineEnabled;
+            set
+            {
+                if (value == _startLineEnabled) return;
+                _startLineEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool UseRelativeExtrusion
+        {
+            get => _useRelativeExtrusion;
+            set
+            {
+                if (value == _useRelativeExtrusion) return;
+                _useRelativeExtrusion = value;
+                OnPropertyChanged();
+            }
         }
 
         public double EndLineSize
@@ -107,14 +143,28 @@ namespace GCodeCorrector.ViewModels
             var newFile = sfd.FileName;
             var code = File.ReadAllLines(SelectedFile);
 
-            var newCode = CorrectEndOfLines(code);
-            var finalCode = CorrectStartOfLines(newCode.ToArray());
+            if (EndLineEnabled)
+            {
+                code = CorrectEndOfLines(code.ToArray()).ToArray();
+            }
+            if (StartLineEnabled)
+            {
+                code = CorrectStartOfLines(code.ToArray()).ToArray();
+            }
 
-            File.WriteAllLines(newFile, finalCode);
-
-            MessageBox.Show(_localizationManager.GetString("SuccessfullySaved"),
-                _localizationManager.GetString("Saving"), MessageBoxButton.OK, MessageBoxImage.None);
-
+            try
+            {
+                File.WriteAllLines(newFile, code);
+                MessageBox.Show(_localizationManager.GetString("SuccessfullySaved"),
+                    _localizationManager.GetString("Saving"), MessageBoxButton.OK, MessageBoxImage.None);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(_localizationManager.GetString("ErrorDuringRecordingToFile"),
+                    _localizationManager.GetString("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+                Console.WriteLine(e);
+            }
+            
             return Empty.Task;
         }
 
@@ -123,6 +173,7 @@ namespace GCodeCorrector.ViewModels
             var newCode = new List<string>();
             var prevX = double.NegativeInfinity;
             var prevY = double.NegativeInfinity;
+            var prevE = double.NegativeInfinity;
 
             for (var i = 0; i < code.Length; i++)
             {
@@ -132,7 +183,7 @@ namespace GCodeCorrector.ViewModels
                     newCode.Add(line);
                     if (line.StartsWith("G92") || line.StartsWith("G0") || line.StartsWith("G1"))
                     {
-                        ParsePrevData(line, ref prevX, ref prevY);
+                        ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     }
 
                     continue;
@@ -142,7 +193,7 @@ namespace GCodeCorrector.ViewModels
                 if (parts.Any(p => p.StartsWith("Z")))
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
@@ -152,12 +203,13 @@ namespace GCodeCorrector.ViewModels
 
                 var x = xPart != null ? double.Parse(xPart.Substring(1).TrimEnd(';')) : prevX;
                 var y = yPart != null ? double.Parse(yPart.Substring(1).TrimEnd(';')) : prevY;
-                var e = ePart != null ? double.Parse(ePart.Substring(1).TrimEnd(';')) : 0.0;
+                var e = ePart != null ? double.Parse(ePart.Substring(1).TrimEnd(';')) : prevE;
+                var extrusion = (e - prevE);
 
-                if (e < 0)
+                if (extrusion < 0)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
@@ -168,14 +220,14 @@ namespace GCodeCorrector.ViewModels
                 if (delta < StartLineSize)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
                 if (i < 1)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
@@ -203,7 +255,7 @@ namespace GCodeCorrector.ViewModels
                 if (!codeFounded)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
@@ -213,7 +265,7 @@ namespace GCodeCorrector.ViewModels
                 if (eRemPart == null)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
@@ -225,15 +277,15 @@ namespace GCodeCorrector.ViewModels
                 var newExtrusion = e * devider;
                 var startExtrusion = (e - newExtrusion) * StartLineCount;
 
-                var startCode = $"G1 X{prevX + startX} Y{prevY + startY} E{startExtrusion}";
+                var startCode = $"G1 X{prevX + startX} Y{prevY + startY} E{prevE + startExtrusion}";
                 newCode.Add(startCode);
 
-                var cuttedLine = $"G1 X{prevX + newDeltaX + startX} Y{prevY + newDeltaY + startY} E{newExtrusion}";
+                var cuttedLine = $"G1 X{prevX + newDeltaX + startX} Y{prevY + newDeltaY + startY} E{prevE + (UseRelativeExtrusion ? 0.0 : startExtrusion) + newExtrusion}";
                 newCode.Add(cuttedLine);
 
                 
 
-                ParsePrevData(cuttedLine, ref prevX, ref prevY);
+                ParsePrevData(cuttedLine, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
             }
 
             return newCode;
@@ -245,6 +297,7 @@ namespace GCodeCorrector.ViewModels
 
             var prevX = double.NegativeInfinity;
             var prevY = double.NegativeInfinity;
+            var prevE = double.NegativeInfinity;
 
             for (var i = 0; i < code.Length; i++)
             {
@@ -254,7 +307,7 @@ namespace GCodeCorrector.ViewModels
                     newCode.Add(line);
                     if (line.StartsWith("G92") || line.StartsWith("G0") || line.StartsWith("G1"))
                     {
-                        ParsePrevData(line, ref prevX, ref prevY);
+                        ParsePrevData(line, ref prevX, ref prevY, ref  prevE, UseRelativeExtrusion);
                     }
 
                     continue;
@@ -264,7 +317,7 @@ namespace GCodeCorrector.ViewModels
                 if (parts.Any(p => p.StartsWith("Z")))
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
@@ -274,12 +327,13 @@ namespace GCodeCorrector.ViewModels
 
                 var x = xPart != null ? double.Parse(xPart.Substring(1).TrimEnd(';')) : prevX;
                 var y = yPart != null ? double.Parse(yPart.Substring(1).TrimEnd(';')) : prevY;
-                var e = ePart != null ? double.Parse(ePart.Substring(1).TrimEnd(';')) : 0.0;
+                var e = ePart != null ? double.Parse(ePart.Substring(1).TrimEnd(';')) : prevE;
+                var extrusion = (e - prevE);
 
-                if (e < 0)
+                if (extrusion <= 0)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
@@ -290,14 +344,14 @@ namespace GCodeCorrector.ViewModels
                 if (delta < EndLineSize)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
                 if (i >= code.Length - 1)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
@@ -325,7 +379,7 @@ namespace GCodeCorrector.ViewModels
                 if (!codeFounded)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
@@ -335,7 +389,7 @@ namespace GCodeCorrector.ViewModels
                 if (eRemPart == null)
                 {
                     newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
                     continue;
                 }
 
@@ -344,16 +398,16 @@ namespace GCodeCorrector.ViewModels
                 var newDeltaY = deltaY * devider;
                 var endX = deltaX - newDeltaX;
                 var endY = deltaY - newDeltaY;
-                var newExtrusion = e * devider;
-                var endExtrusion = (e - newExtrusion) * EndLineCount;
+                var newExtrusion = extrusion * devider;
+                var endExtrusion = (extrusion - newExtrusion) * EndLineCount;
 
-                var cuttedLine = $"G1 X{prevX + newDeltaX} Y{prevY + newDeltaY} E{newExtrusion}";
+                var cuttedLine = $"G1 X{prevX + newDeltaX} Y{prevY + newDeltaY} E{prevE + newExtrusion}";
                 newCode.Add(cuttedLine);
 
-                var endCode = $"G1 X{prevX + newDeltaX + endX} Y{prevY + newDeltaY + endY} E{endExtrusion}";
+                var endCode = $"G1 X{prevX + newDeltaX + endX} Y{prevY + newDeltaY + endY} E{prevE + (UseRelativeExtrusion ? 0.0 : newExtrusion) + endExtrusion}";
                 newCode.Add(endCode);
 
-                ParsePrevData(endCode, ref prevX, ref prevY);
+                ParsePrevData(endCode, ref prevX, ref prevY, ref prevE, UseRelativeExtrusion);
             }
 
             return newCode;
@@ -394,7 +448,7 @@ namespace GCodeCorrector.ViewModels
             return Empty.Task;
         }
 
-        private static void ParsePrevData(string line, ref double prevX, ref double prevY)
+        private static void ParsePrevData(string line, ref double prevX, ref double prevY, ref double prevE, bool useRelativeExtrusion)
         {
             var partsToRem = line.Split(' ');
             var xRemPart = partsToRem.FirstOrDefault(p => p.StartsWith("X"));
@@ -407,6 +461,17 @@ namespace GCodeCorrector.ViewModels
             if (yRemPart != null)
             {
                 ParseStringPartWithCorrection(out prevY, yRemPart);
+            }
+
+            var eRemPart = partsToRem.FirstOrDefault(p => p.StartsWith("E"));
+            if (eRemPart != null)
+            {
+                ParseStringPartWithCorrection(out prevE, eRemPart);
+            }
+
+            if (useRelativeExtrusion)
+            {
+                prevE = 0.0;
             }
         }
 

@@ -41,30 +41,42 @@
                 </Button.Content>
             </Button>
         </StackPanel>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
-            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.StartLineSize'}"/>
-            <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding StartLineSize}" VerticalAlignment="Center"
-                    Margin="6,0"/>
-            <TextBlock VerticalAlignment="Center" Text="{Binding StartLineSize, StringFormat={}{0:F3}}"/>
-        </StackPanel>
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
-            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.StartLineCount'}"/>
-            <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding StartLineCount}" VerticalAlignment="Center"
-                    Margin="6,0"/>
-            <TextBlock VerticalAlignment="Center" Text="{Binding StartLineCount, StringFormat={}{0:F3}}"/>
-        </StackPanel>
+        <GroupBox Grid.Row="2" Header="{DataBinding '$i18n.StartLineParams'}" Margin="0,11" IsEnabled="False" Opacity="0.5">
+            <StackPanel>
+                <CheckBox VerticalAlignment="Center" Margin="0,11,0,3" IsChecked="{Binding StartLineEnabled}" Content="{DataBinding '$i18n.StartLineEnabled'}"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
+                    <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineSize'}"/>
+                    <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding StartLineSize}" VerticalAlignment="Center"
+                            Margin="6,0"/>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding StartLineSize, StringFormat={}{0:F3}}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
+                    <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}"/>
+                    <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding StartLineCount}" VerticalAlignment="Center"
+                            Margin="6,0"/>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding StartLineCount, StringFormat={}{0:F3}}"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+        <GroupBox Grid.Row="3" Header="{DataBinding '$i18n.EndLineParams'}" Margin="0,11">
+            <StackPanel>
+                <CheckBox VerticalAlignment="Center" Margin="0,11,0,3" IsChecked="{Binding EndLineEnabled}" Content="{DataBinding '$i18n.EndLineEnabled'}"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
+                    <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineSize'}"/>
+                    <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding EndLineSize}" VerticalAlignment="Center"
+                            Margin="6,0"/>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding EndLineSize, StringFormat={}{0:F3}}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
+                    <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}"/>
+                    <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding EndLineCount}" VerticalAlignment="Center"
+                            Margin="6,0"/>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding EndLineCount, StringFormat={}{0:F3}}"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+        <CheckBox Grid.Row="4" Margin="0,11" IsChecked="{Binding UseRelativeExtrusion}" Content="{DataBinding '$i18n.UseRelativeExtrusion'}"></CheckBox>
 
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
-            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineSize'}"/>
-            <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding EndLineSize}" VerticalAlignment="Center"
-                    Margin="6,0"/>
-            <TextBlock VerticalAlignment="Center" Text="{Binding EndLineSize, StringFormat={}{0:F3}}"/>
-        </StackPanel>
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
-            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}"/>
-            <Slider Width="150" Minimum="0.0" Maximum="1" Value="{Binding EndLineCount}" VerticalAlignment="Center"
-                    Margin="6,0"/>
-            <TextBlock VerticalAlignment="Center" Text="{Binding EndLineCount, StringFormat={}{0:F3}}"/>
-        </StackPanel>
+        
     </Grid>
 </Window>
