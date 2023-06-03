@@ -1,0 +1,5 @@
+<thirdparty>
+    <dependency name='nuget' version='5.10.0' if='windows' auto_link='false'/>
+	<dependency name='cmake' version='3.23.0-windows' if='windows' auto_link='false'/>
+	<dependency name='nsis' version='3.06' if='windows'/>
+</thirdparty>
