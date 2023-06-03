@@ -1,0 +1,9 @@
+[submodule "YBuild"]
+	path = YBuild
+	url = https://github.com/AlexanderYunker1983/YBuild.git
+[submodule "YLocalization"]
+	path = YLocalization
+	url = https://github.com/AlexanderYunker1983/YLocalization.git
+[submodule "YMugenExtensions"]
+	path = YMugenExtensions
+	url = https://github.com/AlexanderYunker1983/YMugenExtensions.git
