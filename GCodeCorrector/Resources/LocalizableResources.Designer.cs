@@ -61,7 +61,7 @@ namespace GCodeCorrector.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Поток на сокращаемом участке:.
+        ///   Looks up a localized string similar to Поток на сокращаемом участке в долях от номинального потока:.
         /// </summary>
         internal static string EndLineCount {
             get {

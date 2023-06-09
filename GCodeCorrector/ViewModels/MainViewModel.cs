@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Media3D;
 using GCodeCorrector.Infrastructure;
 using Microsoft.Win32;
 using MugenMvvmToolkit;
@@ -316,7 +317,7 @@ namespace GCodeCorrector.ViewModels
 
             for (var i = 0; i < code.Length; i++)
             {
-                var line = code[i];
+                var line = code[i].Trim(' ');
                 if (!line.StartsWith("G1") || double.IsNegativeInfinity(prevX) || double.IsNegativeInfinity(prevY))
                 {
                     newCode.Add(line);
@@ -336,14 +337,13 @@ namespace GCodeCorrector.ViewModels
                     continue;
                 }
 
-                var xPart = parts.FirstOrDefault(p => p.StartsWith("X"));
-                var yPart = parts.FirstOrDefault(p => p.StartsWith("Y"));
-                var ePart = parts.FirstOrDefault(p => p.StartsWith("E"));
+                var x = prevX;
+                var y = prevY;
+                var e = prevE;
 
-                var x = xPart != null ? double.Parse(xPart.Substring(1).TrimEnd(';')) : prevX;
-                var y = yPart != null ? double.Parse(yPart.Substring(1).TrimEnd(';')) : prevY;
-                var e = ePart != null ? double.Parse(ePart.Substring(1).TrimEnd(';')) : prevE;
-                var extrusion = (e - prevE);
+                ParsePrevData(line, ref x, ref y, ref e, false);
+                
+                var extrusion = e - prevE;
 
                 if (extrusion <= 0)
                 {
@@ -356,7 +356,7 @@ namespace GCodeCorrector.ViewModels
                 var deltaY = y - prevY;
                 var delta = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
 
-                if (delta < EndLineSize)
+                if (delta <= EndLineSize)
                 {
                     newCode.Add(line);
                     ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
@@ -369,15 +369,15 @@ namespace GCodeCorrector.ViewModels
                     ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
                     continue;
                 }
-
+                
                 var counter = 1;
                 var codeFounded = false;
                 var nextCommand = string.Empty;
 
                 while (counter + i < code.Length)
                 {
-                    nextCommand = code[i + counter];
-                    if (!(nextCommand.StartsWith("G") || nextCommand.StartsWith("M")))
+                    nextCommand = code[i + counter].Trim(' ');
+                    if (!nextCommand.StartsWith("G"))
                     {
                         counter++;
                         continue;
@@ -385,7 +385,11 @@ namespace GCodeCorrector.ViewModels
 
                     if (nextCommand.StartsWith("G1"))
                     {
-                        codeFounded = true;
+                        var nextParts = nextCommand.Split(' ');
+                        if (nextParts.Any(p => p.StartsWith("E")))
+                        {
+                            codeFounded = true;
+                        }
                     }
 
                     break;
@@ -398,31 +402,74 @@ namespace GCodeCorrector.ViewModels
                     continue;
                 }
 
-                var partsToRem = nextCommand.Split(' ');
-                var eRemPart = partsToRem.FirstOrDefault(p => p.StartsWith("E"));
+                var newX = prevX;
+                var newY = prevY;
+                var newE = prevE;
 
-                if (eRemPart == null)
+                ParsePrevData(nextCommand, ref newX, ref newY, ref newE, false);
+
+                if (extrusion <= 0)
+                {
+                    newCode.Add(line);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                    continue;
+                }
+                var nextDeltaX = newX - x;
+                var nextDeltaY = newY - y;
+                var nextDelta = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+                if (nextDelta <= EndLineSize)
                 {
                     newCode.Add(line);
                     ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
                     continue;
                 }
 
+                var sin = deltaX * nextDeltaY - nextDeltaX * deltaY;
+                var cos = deltaX * nextDeltaX + deltaY * nextDeltaY;
+                var angle = Math.Atan2(sin, cos) * (180 / Math.PI);
+                if (angle < 0)
+                {
+                    angle += 180;
+                }
+
+                if (angle > 180)
+                {
+                    angle -= 180;
+                }
+                
                 var devider = (delta - EndLineSize) / delta;
+                if (devider <= 0)
+                {
+                    newCode.Add(line);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                    continue;
+                }
                 var newDeltaX = deltaX * devider;
                 var newDeltaY = deltaY * devider;
-                var endX = deltaX - newDeltaX;
-                var endY = deltaY - newDeltaY;
-                var newExtrusion = extrusion * devider;
-                var endExtrusion = (extrusion - newExtrusion) * EndLineCount;
 
+                var newExtrusion = extrusion * devider;
+                var oldExtrusion = extrusion - newExtrusion;
+                var endExtrusion = (extrusion - newExtrusion) * (1 - (1 - EndLineCount) * Math.Sin(angle / (180 / Math.PI)));
+                if (endExtrusion > oldExtrusion)
+                {
+                    newCode.Add(line);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                    continue;
+                }
                 var cuttedLine = $"G1 X{prevX + newDeltaX} Y{prevY + newDeltaY} E{prevE + newExtrusion}";
                 newCode.Add(cuttedLine);
 
-                var endCode = $"G1 X{prevX + newDeltaX + endX} Y{prevY + newDeltaY + endY} E{prevE + (_useRelativeExtrusion ? 0.0 : newExtrusion) + endExtrusion}";
+                var endCode = $"G1 X{x} Y{y} E{prevE + (_useRelativeExtrusion ? 0.0 : newExtrusion) + endExtrusion}";
                 newCode.Add(endCode);
+                if (!_useRelativeExtrusion)
+                {
+                    var finalCode = $"G92 E{e}";
+                    newCode.Add(finalCode);
+                }
 
-                ParsePrevData(endCode, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                prevX = x;
+                prevY = y;
+                prevE = _useRelativeExtrusion ? 0.0 : e;
             }
 
             return newCode;

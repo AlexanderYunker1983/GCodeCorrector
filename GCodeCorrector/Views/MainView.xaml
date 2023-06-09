@@ -9,8 +9,9 @@
                      mc:Ignorable="d"
                      d:DataContext="{d:DesignInstance viewModels:MainViewModel}"
                      Title="{DataBinding DisplayName}"
-                     WindowStartupLocation="CenterScreen"
-                     Height="450" Width="800" TextOptions.TextFormattingMode="Ideal">
+                     WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight"
+                     Width="800" TextOptions.TextFormattingMode="Ideal"
+                     ResizeMode="NoResize">
     <Grid Margin="11">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -18,12 +19,10 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left">
-            <Button Command="{DataBinding OpenFileCommand}">
+            <Button Command="{DataBinding OpenFileCommand}" VerticalAlignment="Center">
                 <Button.Content>
                     <StackPanel Orientation="Horizontal">
                         <fa5:ImageAwesome Height="24" Margin="3" Icon="Regular_FileAlt" VerticalAlignment="Center"/>
@@ -31,10 +30,7 @@
                     </StackPanel>
                 </Button.Content>
             </Button>
-            <TextBlock VerticalAlignment="Center" Text="{Binding SelectedFile}" Margin="11,0,0,0"/>
-        </StackPanel>
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
-            <Button Command="{DataBinding SaveFileCommand}">
+            <Button Command="{DataBinding SaveFileCommand}" Margin="6,0,0,0" VerticalAlignment="Center">
                 <Button.Content>
                     <StackPanel Orientation="Horizontal">
                         <fa5:ImageAwesome Height="24" Margin="3" Icon="Regular_Save" VerticalAlignment="Center"/>
@@ -42,8 +38,9 @@
                     </StackPanel>
                 </Button.Content>
             </Button>
+            <TextBlock VerticalAlignment="Center" Text="{Binding SelectedFile}" Margin="11,0,0,0"/>
         </StackPanel>
-        <GroupBox Grid.Row="2" Header="{DataBinding '$i18n.StartLineParams'}" Margin="0,11" IsEnabled="False" Opacity="0.5">
+        <GroupBox Grid.Row="1" Header="{DataBinding '$i18n.StartLineParams'}" Margin="0,11" IsEnabled="False" Opacity="0.5">
             <StackPanel>
                 <CheckBox VerticalAlignment="Center" Margin="0,11,0,3" IsChecked="{Binding StartLineEnabled}" Content="{DataBinding '$i18n.StartLineEnabled'}"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
@@ -60,7 +57,7 @@
                 </StackPanel>
             </StackPanel>
         </GroupBox>
-        <GroupBox Grid.Row="3" Header="{DataBinding '$i18n.EndLineParams'}" Margin="0,11">
+        <GroupBox Grid.Row="2" Header="{DataBinding '$i18n.EndLineParams'}" Margin="0,11">
             <StackPanel>
                 <CheckBox VerticalAlignment="Center" Margin="0,11,0,3" IsChecked="{Binding EndLineEnabled}" Content="{DataBinding '$i18n.EndLineEnabled'}"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
