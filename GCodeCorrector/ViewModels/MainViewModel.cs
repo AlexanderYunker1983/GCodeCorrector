@@ -413,13 +413,7 @@ namespace GCodeCorrector.ViewModels
                 var newExtrusion = extrusion * devider;
                 var oldExtrusion = extrusion - newExtrusion;
                 var endExtrusion = (extrusion - newExtrusion) * (1 - (1 - StartLineCount) * Math.Sin(angle / (180 / Math.PI)));
-                if (endExtrusion > oldExtrusion)
-                {
-                    newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
-                    continue;
-                }
-
+                
                 var startCode = $"G1 X{prevX + startX} Y{prevY + startY} E{prevE + endExtrusion}";
                 newCode.Add(startCode);
                 if (!_useRelativeExtrusion)
@@ -584,14 +578,8 @@ namespace GCodeCorrector.ViewModels
                 var newDeltaY = deltaY * devider;
 
                 var newExtrusion = extrusion * devider;
-                var oldExtrusion = extrusion - newExtrusion;
                 var endExtrusion = (extrusion - newExtrusion) * (1 - (1 - EndLineCount) * Math.Sin(angle / (180 / Math.PI)));
-                if (endExtrusion > oldExtrusion)
-                {
-                    newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
-                    continue;
-                }
+                
                 var cuttedLine = $"G1 X{prevX + newDeltaX} Y{prevY + newDeltaY} E{prevE + newExtrusion}";
                 newCode.Add(cuttedLine);
 
