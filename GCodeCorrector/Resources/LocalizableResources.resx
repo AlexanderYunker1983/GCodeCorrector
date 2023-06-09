@@ -135,6 +135,12 @@
   <data name="ErrorDuringRecordingToFile" xml:space="preserve">
     <value>Не удалось сохранить данные в файл</value>
   </data>
+  <data name="FilePath" xml:space="preserve">
+    <value>Выбранный файл:</value>
+  </data>
+  <data name="NoFile" xml:space="preserve">
+    <value>исходный gcode-файл не выбран</value>
+  </data>
   <data name="OpenFile" xml:space="preserve">
     <value>Открыть файл</value>
   </data>

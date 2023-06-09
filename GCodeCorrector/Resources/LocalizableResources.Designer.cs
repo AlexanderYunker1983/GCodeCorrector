@@ -115,6 +115,24 @@ namespace GCodeCorrector.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Выбранный файл:.
+        /// </summary>
+        internal static string FilePath {
+            get {
+                return ResourceManager.GetString("FilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to исходный gcode-файл не выбран.
+        /// </summary>
+        internal static string NoFile {
+            get {
+                return ResourceManager.GetString("NoFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Открыть файл.
         /// </summary>
         internal static string OpenFile {

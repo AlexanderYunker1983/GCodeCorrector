@@ -18,12 +18,9 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Control Grid.Row="0" Grid.RowSpan="7" Template="{StaticResource WaitControlTemplateWithoutText}" View.Visible="{DataBinding IsBusy}"/>
+        <Control Grid.Row="0" Grid.RowSpan="4" Template="{StaticResource WaitControlTemplateWithoutText}" View.Visible="{DataBinding IsBusy}"/>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left">
             <Button Command="{DataBinding OpenFileCommand}" VerticalAlignment="Center">
@@ -42,41 +39,69 @@
                     </StackPanel>
                 </Button.Content>
             </Button>
-            <TextBlock VerticalAlignment="Center" Text="{Binding SelectedFile}" Margin="11,0,0,0"/>
         </StackPanel>
-        <GroupBox Grid.Row="1" Header="{DataBinding '$i18n.StartLineParams'}" Margin="0,11">
-            <StackPanel>
-                <CheckBox VerticalAlignment="Center" Margin="0,11,0,3" IsChecked="{Binding StartLineEnabled}" Content="{DataBinding '$i18n.StartLineEnabled'}"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
-                    <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineSize'}"/>
-                    <Slider Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding StartLineSize}" VerticalAlignment="Center"
-                            Margin="6,0" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
-                    <TextBlock VerticalAlignment="Center" Text="{Binding StartLineSize, StringFormat={}{0:F3}}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
-                    <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}"/>
-                    <Slider Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding StartLineFlow}" VerticalAlignment="Center"
-                            Margin="6,0" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
-                    <TextBlock VerticalAlignment="Center" Text="{Binding StartLineFlow, StringFormat={}{0:F3}}"/>
-                </StackPanel>
-            </StackPanel>
+        
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,3,0,0">
+            <TextBlock VerticalAlignment="Center" Margin="0,0,3,0" Text="{DataBinding '$i18n.FilePath'}"/>
+            <TextBlock VerticalAlignment="Center" Text="{DataBinding SelectedFile}"/>
+            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.NoFile'}" View.Visible="{DataBinding 'String.IsNullOrEmpty(SelectedFile)'}"/>
+        </StackPanel>
+
+        <GroupBox Grid.Row="2" Header="{DataBinding '$i18n.StartLineParams'}" Margin="0,11">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <CheckBox VerticalAlignment="Center" Margin="0,11,0,6" IsChecked="{Binding StartLineEnabled}" 
+                          Content="{DataBinding '$i18n.StartLineEnabled'}"
+                          Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineSize'}" Margin="0, 6"/>
+                <Slider Grid.Row="1" Grid.Column="1" Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding StartLineSize}" VerticalAlignment="Center"
+                        Margin="6,6" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Text="{Binding StartLineSize, StringFormat={}{0:F3}}" Margin="0, 6"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}" Margin="0, 6"/>
+                <Slider Grid.Row="2" Grid.Column="1" Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding StartLineFlow}" VerticalAlignment="Center"
+                        Margin="6,6" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
+                <TextBlock Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Text="{Binding StartLineFlow, StringFormat={}{0:F3}}" Margin="0, 6"/>
+            </Grid>
         </GroupBox>
-        <GroupBox Grid.Row="2" Header="{DataBinding '$i18n.EndLineParams'}" Margin="0,11">
-            <StackPanel>
-                <CheckBox VerticalAlignment="Center" Margin="0,11,0,3" IsChecked="{Binding EndLineEnabled}" Content="{DataBinding '$i18n.EndLineEnabled'}"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
-                    <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineSize'}"/>
-                    <Slider Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding EndLineSize}" VerticalAlignment="Center"
-                            Margin="6,0" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
-                    <TextBlock VerticalAlignment="Center" Text="{Binding EndLineSize, StringFormat={}{0:F3}}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
-                    <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}"/>
-                    <Slider Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding EndLineFlow}" VerticalAlignment="Center"
-                            Margin="6,0" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
-                    <TextBlock VerticalAlignment="Center" Text="{Binding EndLineFlow, StringFormat={}{0:F3}}"/>
-                </StackPanel>
-            </StackPanel>
+        <GroupBox Grid.Row="3" Header="{DataBinding '$i18n.EndLineParams'}" Margin="0,11">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <CheckBox VerticalAlignment="Center" Margin="0,11,0,6" IsChecked="{Binding EndLineEnabled}" 
+                          Content="{DataBinding '$i18n.EndLineEnabled'}"
+                          Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineSize'}" Margin="0, 6"/>
+                <Slider Grid.Row="1" Grid.Column="1" Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding EndLineSize}" VerticalAlignment="Center"
+                        Margin="6,6" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Text="{Binding EndLineSize, StringFormat={}{0:F3}}" Margin="0, 6"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}" Margin="0, 6"/>
+                <Slider Grid.Row="2" Grid.Column="1" Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding EndLineFlow}" VerticalAlignment="Center"
+                        Margin="6,6" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
+                <TextBlock Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Text="{Binding EndLineFlow, StringFormat={}{0:F3}}" Margin="0, 6"/>
+            </Grid>
         </GroupBox>
     </Grid>
 </infrastructure:PerMonitorDpiWindow>
