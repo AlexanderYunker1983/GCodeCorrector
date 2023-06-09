@@ -135,9 +135,6 @@
   <data name="ErrorDuringRecordingToFile" xml:space="preserve">
     <value>Не удалось сохранить данные в файл</value>
   </data>
-  <data name="FindOtherLines" xml:space="preserve">
-    <value>Режим с поиском сопряжённых линий (на данный момент работает не всегда и очень медленно)</value>
-  </data>
   <data name="OpenFile" xml:space="preserve">
     <value>Открыть файл</value>
   </data>
