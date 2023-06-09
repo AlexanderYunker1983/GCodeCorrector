@@ -18,6 +18,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Control Grid.Row="0" Grid.RowSpan="4" Template="{StaticResource WaitControlTemplateWithoutText}" View.Visible="{DataBinding IsBusy}"/>
@@ -44,7 +45,7 @@
         <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,3,0,0">
             <TextBlock VerticalAlignment="Center" Margin="0,0,3,0" Text="{DataBinding '$i18n.FilePath'}"/>
             <TextBlock VerticalAlignment="Center" Text="{DataBinding SelectedFile}"/>
-            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.NoFile'}" View.Visible="{DataBinding 'String.IsNullOrEmpty(SelectedFile)'}"/>
+            <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.NoFile'}" View.Visible="{DataBinding ShowWarning}"/>
         </StackPanel>
 
         <GroupBox Grid.Row="2" Header="{DataBinding '$i18n.StartLineParams'}" Margin="0,11">
@@ -75,7 +76,7 @@
                 <TextBlock Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Text="{Binding StartLineFlow, StringFormat={}{0:F3}}" Margin="0, 6"/>
             </Grid>
         </GroupBox>
-        <GroupBox Grid.Row="3" Header="{DataBinding '$i18n.EndLineParams'}" Margin="0,11">
+        <GroupBox Grid.Row="3" Header="{DataBinding '$i18n.EndLineParams'}" Margin="0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -103,5 +104,12 @@
                 <TextBlock Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Text="{Binding EndLineFlow, StringFormat={}{0:F3}}" Margin="0, 6"/>
             </Grid>
         </GroupBox>
+
+        <StackPanel Grid.Row="4" Margin="0,11,0,0" Orientation="Horizontal">
+            <TextBlock  VerticalAlignment="Center" Text="{DataBinding '$i18n.MinimumLength'}" Margin="0, 6"/>
+            <Slider Width="150" Minimum="0.0" Maximum="10.0" Value="{Binding MinimumLength}" VerticalAlignment="Center"
+                    Margin="6,6" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
+            <TextBlock VerticalAlignment="Center" Text="{Binding MinimumLength, StringFormat={}{0:F3}}" Margin="0, 6"/>
+        </StackPanel>
     </Grid>
 </infrastructure:PerMonitorDpiWindow>

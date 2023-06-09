@@ -33,6 +33,7 @@ namespace GCodeCorrector.ViewModels
         private bool _startLineEnabled = true;
         private bool _endLineEnabled = true;
         private bool _useRelativeExtrusion;
+        private double _minimumLength = 2.0;
 
         public MainViewModel(ILocalizationManager localizationManager)
         {
@@ -109,6 +110,19 @@ namespace GCodeCorrector.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        public double MinimumLength
+        {
+            get => _minimumLength;
+            set
+            {
+                if (value.Equals(_minimumLength)) return;
+                _minimumLength = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowWarning => string.IsNullOrEmpty(SelectedFile);
 
         private void PrepareCommands()
         {
@@ -204,6 +218,7 @@ namespace GCodeCorrector.ViewModels
                     (d.NextCodeHasExtrusion && EndLineEnabled ||
                      d.PrevCodeHasExtrusion && StartLineEnabled) &&
                     d.Length > (EndLineEnabled ? EndLineSize : 0.0) + (StartLineEnabled ? StartLineSize : 0.0) &&
+                    d.Length >= MinimumLength &&
                     Math.Abs(d.DeltaZ) < float.Epsilon)
                 .ToList();
             foreach (var gCodeLine in dataWithExtrusionForCorrection)
@@ -211,19 +226,19 @@ namespace GCodeCorrector.ViewModels
                 var startAngle = FindAngleInDegreesWithCorrection(gCodeLine, gCodeLine.PrevCode);
                 var endAngle = FindAngleInDegreesWithCorrection(gCodeLine, gCodeLine.NextCode);
 
-                var relativeE = gCodeLine.DeltaE / gCodeLine.Length;
                 var prevCode = gCodeLine.PrevCode;
                 var nextCode = gCodeLine.NextCode;
-                var enableStartPart = StartLineEnabled && prevCode != null && prevCode.HasExtrusion && prevCode.DeltaE > 0;
-                var enableEndPart = EndLineEnabled && nextCode != null && nextCode.HasExtrusion && nextCode.DeltaE > 0;
+                var enableStartPart = StartLineEnabled && prevCode != null && prevCode.HasExtrusion && prevCode.DeltaE > 0 && Math.Abs(startAngle) > float.Epsilon && Math.Abs(startAngle - 180) > float.Epsilon;
+                var enableEndPart = EndLineEnabled && nextCode != null && nextCode.HasExtrusion && nextCode.DeltaE > 0 && Math.Abs(endAngle) > float.Epsilon && Math.Abs(endAngle - 180) > float.Epsilon;
                 var startLength = enableStartPart ? StartLineSize : 0.0;
                 var endLength = enableEndPart ? EndLineSize : 0.0;
 
                 var startPart = startLength / gCodeLine.Length;
                 var endPart = endLength / gCodeLine.Length;
 
-                var startExtrusionInFile = enableStartPart ? startLength * relativeE : 0.0;
-                var endExtrusionInFile = enableEndPart ? endLength * relativeE : 0.0;
+                var startExtrusionInFile = enableStartPart ? gCodeLine.DeltaE * startPart : 0.0;
+                var endExtrusionInFile = enableEndPart ? gCodeLine.DeltaE * endPart : 0.0;
+
                 var mainExtrusion = gCodeLine.DeltaE - startExtrusionInFile - endExtrusionInFile;
 
                 var startExtrusion = enableStartPart ? startExtrusionInFile * (1 - (1 - StartLineFlow) * Math.Sin(startAngle / (180 / Math.PI))) : 0.0;
@@ -281,18 +296,7 @@ namespace GCodeCorrector.ViewModels
 
                 gCodeLine.ModifiedLines.Add(mainLine);
                 prevState = mainEndState;
-                if (!_useRelativeExtrusion)
-                {
-                    prevState.E = mainLine.StartState.E + mainExtrusion;
-                    gCodeLine.ModifiedLines.Add(new GCodeLine
-                    {
-                        OriginalCode = $"G92 E{prevState.E}"
-                    });
-                }
-                else
-                {
-                    prevState.E = 0.0;
-                }
+                prevState.E = !_useRelativeExtrusion ? mainLine.StartState.E + mainExtrusion : 0.0;
 
                 if (enableEndPart)
                 {
@@ -303,8 +307,8 @@ namespace GCodeCorrector.ViewModels
                         StartState = prevState
                     };
                     var endState = new State(endLine.StartState);
-                    endState.X += gCodeLine.DeltaX * endPart;
-                    endState.Y += gCodeLine.DeltaY * endPart;
+                    endState.X = gCodeLine.EndState.X;
+                    endState.Y = gCodeLine.EndState.Y;
                     endState.E = _useRelativeExtrusion ? endExtrusion : endExtrusion + endLine.StartState.E;
                     endLine.EndState = endState;
 
@@ -315,7 +319,7 @@ namespace GCodeCorrector.ViewModels
                         prevState.E = endLine.StartState.E + startExtrusionInFile;
                         gCodeLine.ModifiedLines.Add(new GCodeLine
                         {
-                            OriginalCode = $"G92 E{prevState.E}"
+                            OriginalCode = $"G92 E{gCodeLine.EndState.E}"
                         });
                     }
                     else
@@ -511,6 +515,7 @@ namespace GCodeCorrector.ViewModels
                 if (value == _selectedFile) return;
                 _selectedFile = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(ShowWarning));
             }
         }
 

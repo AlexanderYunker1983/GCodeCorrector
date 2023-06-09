@@ -61,7 +61,7 @@ namespace GCodeCorrector.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Поток на сокращаемом участке в долях от номинального потока:.
+        ///   Looks up a localized string similar to Поток на участке в долях от номинального потока:.
         /// </summary>
         internal static string EndLineCount {
             get {
@@ -88,7 +88,7 @@ namespace GCodeCorrector.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Длина сокращаемого участка, мм:.
+        ///   Looks up a localized string similar to Длина участка, мм:.
         /// </summary>
         internal static string EndLineSize {
             get {
@@ -120,6 +120,15 @@ namespace GCodeCorrector.Resources {
         internal static string FilePath {
             get {
                 return ResourceManager.GetString("FilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Минимальная длина обрабатываемой линии, мм:.
+        /// </summary>
+        internal static string MinimumLength {
+            get {
+                return ResourceManager.GetString("MinimumLength", resourceCulture);
             }
         }
         

@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="EndLineCount" xml:space="preserve">
-    <value>Поток на сокращаемом участке в долях от номинального потока:</value>
+    <value>Поток на участке в долях от номинального потока:</value>
   </data>
   <data name="EndLineEnabled" xml:space="preserve">
     <value>Обработка конца линии включена</value>
@@ -127,7 +127,7 @@
     <value>Параметры обработки конца линии</value>
   </data>
   <data name="EndLineSize" xml:space="preserve">
-    <value>Длина сокращаемого участка, мм:</value>
+    <value>Длина участка, мм:</value>
   </data>
   <data name="Error" xml:space="preserve">
     <value>Ошибка</value>
@@ -137,6 +137,9 @@
   </data>
   <data name="FilePath" xml:space="preserve">
     <value>Выбранный файл:</value>
+  </data>
+  <data name="MinimumLength" xml:space="preserve">
+    <value>Минимальная длина обрабатываемой линии, мм:</value>
   </data>
   <data name="NoFile" xml:space="preserve">
     <value>исходный gcode-файл не выбран</value>
