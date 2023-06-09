@@ -131,13 +131,20 @@ namespace GCodeCorrector.ViewModels
             {
                 return;
             }
+
+            var token = BeginBusy();
+
             var newFile = sfd.FileName;
 
-            var data = ReadAndParseFile().ToList();
-            
-            CorrectLines(data);
+            string[] code = null;
+            await Task.Run(() =>
+            {
+                var data = ReadAndParseFile().ToList();
 
-            var code = FormCodeFromData(data);
+                CorrectLines(data);
+
+                code = FormCodeFromData(data);
+            });
             
             try
             {
@@ -151,6 +158,7 @@ namespace GCodeCorrector.ViewModels
                     _localizationManager.GetString("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
                 Console.WriteLine(e);
             }
+            token.Dispose();
         }
 
         private string[] FormCodeFromData(IEnumerable<GCodeLine> data)

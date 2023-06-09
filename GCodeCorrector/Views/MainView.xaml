@@ -12,7 +12,7 @@
                      WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight"
                      Width="800" TextOptions.TextFormattingMode="Ideal"
                      ResizeMode="NoResize">
-    <Grid Margin="11">
+    <Grid Margin="11" IsEnabled="{DataBinding !IsBusy}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -22,6 +22,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
+        <Control Grid.Row="0" Grid.RowSpan="7" Template="{StaticResource WaitControlTemplateWithoutText}" View.Visible="{DataBinding IsBusy}"/>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left">
             <Button Command="{DataBinding OpenFileCommand}" VerticalAlignment="Center">
