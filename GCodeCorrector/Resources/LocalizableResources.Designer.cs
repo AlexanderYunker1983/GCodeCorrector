@@ -115,6 +115,15 @@ namespace GCodeCorrector.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Режим с поиском сопряжённых линий (на данный момент работает не всегда и очень медленно).
+        /// </summary>
+        internal static string FindOtherLines {
+            get {
+                return ResourceManager.GetString("FindOtherLines", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Открыть файл.
         /// </summary>
         internal static string OpenFile {

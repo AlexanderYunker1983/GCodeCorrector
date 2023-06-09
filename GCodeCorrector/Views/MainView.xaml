@@ -19,6 +19,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left">
@@ -40,7 +42,7 @@
             </Button>
             <TextBlock VerticalAlignment="Center" Text="{Binding SelectedFile}" Margin="11,0,0,0"/>
         </StackPanel>
-        <GroupBox Grid.Row="1" Header="{DataBinding '$i18n.StartLineParams'}" Margin="0,11" IsEnabled="False" Opacity="0.5">
+        <GroupBox Grid.Row="1" Header="{DataBinding '$i18n.StartLineParams'}" Margin="0,11">
             <StackPanel>
                 <CheckBox VerticalAlignment="Center" Margin="0,11,0,3" IsChecked="{Binding StartLineEnabled}" Content="{DataBinding '$i18n.StartLineEnabled'}"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
@@ -74,5 +76,7 @@
                 </StackPanel>
             </StackPanel>
         </GroupBox>
+        <CheckBox Grid.Row="3" IsChecked="{Binding FindOtherLines}" Content="{DataBinding '$i18n.FindOtherLines'}" Margin="6"/>
+        <ProgressBar Grid.Row="4" Value="{DataBinding Progress}" Minimum="0" Maximum="100" View.Visible="{DataBinding ShowProgress}"/>
     </Grid>
 </infrastructure:PerMonitorDpiWindow>

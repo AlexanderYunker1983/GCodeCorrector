@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -15,6 +16,7 @@ using MugenMvvmToolkit.Interfaces.Models;
 using MugenMvvmToolkit.ViewModels;
 using YLocalization;
 using YMugenExtensions.Commands;
+using static System.Windows.Forms.AxHost;
 using File = System.IO.File;
 
 namespace GCodeCorrector.ViewModels
@@ -28,7 +30,7 @@ namespace GCodeCorrector.ViewModels
         private double _endLineCount = 0.8;
         private double _startLineSize = 0.4;
         private double _startLineCount = 0.6;
-        private bool _startLineEnabled;
+        private bool _startLineEnabled = true;
         private bool _endLineEnabled = true;
         private bool _useRelativeExtrusion;
 
@@ -114,8 +116,10 @@ namespace GCodeCorrector.ViewModels
             SaveFileCommand = new AsyncYRelayCommand(OnSaveFile, OnCanSaveFile, acceptedProperties: new []{ nameof(SelectedFile) }, notifiers: this);
         }
 
-        private Task OnSaveFile()
+        private async Task OnSaveFile()
         {
+            ShowProgress = StartLineEnabled;
+            Progress = 0;
             var dir = Path.GetDirectoryName(SelectedFile);
             var sfd = new SaveFileDialog
             {
@@ -127,11 +131,11 @@ namespace GCodeCorrector.ViewModels
 
             if (sfd.ShowDialog() != true)
             {
-                return Empty.Task;
+                return;
             }
             var newFile = sfd.FileName;
 
-            ReadFileAndCorrect(sfd, out var code);
+            var code = await ReadFileAndCorrect(sfd);
 
             try
             {
@@ -145,14 +149,19 @@ namespace GCodeCorrector.ViewModels
                     _localizationManager.GetString("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
                 Console.WriteLine(e);
             }
-            
-            return Empty.Task;
+
+            Progress = 100;
+            ShowProgress = false;
         }
 
-        private void ReadFileAndCorrect(SaveFileDialog sfd, out string[] code)
+        private string[] tempCode;
+        private int _progress;
+        private bool _showProgress;
+        private bool _findOtherLines;
+
+        private async Task<string[]> ReadFileAndCorrect(SaveFileDialog sfd)
         {
-            
-            code = File.ReadAllLines(SelectedFile);
+            var code = File.ReadAllLines(SelectedFile);
 
             _useRelativeExtrusion = FindRelativeExtrusion(code);
             
@@ -160,11 +169,18 @@ namespace GCodeCorrector.ViewModels
             {
                 code = CorrectEndOfLines(code.ToArray()).ToArray();
             }
-
+            
             if (StartLineEnabled)
             {
-                code = CorrectStartOfLines(code.ToArray()).ToArray();
+                tempCode = code.ToArray();
+                await Task.Run(() =>
+                {
+                    tempCode = CorrectStartOfLines(tempCode.ToArray()).ToArray();
+                });
+                code = tempCode.ToArray();
             }
+
+            return code;
         }
 
         private bool FindRelativeExtrusion(string[] code)
@@ -184,16 +200,76 @@ namespace GCodeCorrector.ViewModels
             return result;
         }
 
+        private void FindParam(string[] code, int index, ref double x, ref double y, ref double e,
+            bool useRelativeExtrusion)
+        {
+            var prevX = double.NegativeInfinity;
+            var prevY = double.NegativeInfinity;
+            var prevE = double.NegativeInfinity;
+            for (var i = 0; i < index; i++)
+            {
+                var line = code[i].Trim(' ');
+                if (!line.StartsWith("G1") || double.IsNegativeInfinity(prevX) || double.IsNegativeInfinity(prevY))
+                {
+                    if (line.StartsWith("G92") || line.StartsWith("G0") || line.StartsWith("G1"))
+                    {
+                        ParsePrevData(line, ref prevX, ref prevY, ref prevE, useRelativeExtrusion);
+                    }
+
+                    continue;
+                }
+                ParsePrevData(line, ref prevX, ref prevY, ref prevE, useRelativeExtrusion);
+            }
+            x = prevX; 
+            y = prevY; 
+            e = prevE;
+        }
+
+        public int Progress
+        {
+            get => _progress;
+            set
+            {
+                if (value == _progress) return;
+                _progress = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowProgress
+        {
+            get => _showProgress;
+            set
+            {
+                if (value == _showProgress) return;
+                _showProgress = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool FindOtherLines
+        {
+            get => _findOtherLines;
+            set
+            {
+                if (value == _findOtherLines) return;
+                _findOtherLines = value;
+                OnPropertyChanged();
+            }
+        }
+
         private IEnumerable<string> CorrectStartOfLines(string[] code)
         {
             var newCode = new List<string>();
+
             var prevX = double.NegativeInfinity;
             var prevY = double.NegativeInfinity;
             var prevE = double.NegativeInfinity;
 
             for (var i = 0; i < code.Length; i++)
             {
-                var line = code[i];
+                Progress = (int)(i * 100.0 / code.Length);
+                var line = code[i].Trim(' ');
                 if (!line.StartsWith("G1") || double.IsNegativeInfinity(prevX) || double.IsNegativeInfinity(prevY))
                 {
                     newCode.Add(line);
@@ -213,16 +289,15 @@ namespace GCodeCorrector.ViewModels
                     continue;
                 }
 
-                var xPart = parts.FirstOrDefault(p => p.StartsWith("X"));
-                var yPart = parts.FirstOrDefault(p => p.StartsWith("Y"));
-                var ePart = parts.FirstOrDefault(p => p.StartsWith("E"));
+                var x = prevX;
+                var y = prevY;
+                var e = prevE;
 
-                var x = xPart != null ? double.Parse(xPart.Substring(1).TrimEnd(';')) : prevX;
-                var y = yPart != null ? double.Parse(yPart.Substring(1).TrimEnd(';')) : prevY;
-                var e = ePart != null ? double.Parse(ePart.Substring(1).TrimEnd(';')) : prevE;
-                var extrusion = (e - prevE);
+                ParsePrevData(line, ref x, ref y, ref e, false);
 
-                if (extrusion < 0)
+                var extrusion = e - prevE;
+
+                if (extrusion <= 0)
                 {
                     newCode.Add(line);
                     ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
@@ -233,75 +308,131 @@ namespace GCodeCorrector.ViewModels
                 var deltaY = y - prevY;
                 var delta = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
 
-                if (delta < StartLineSize)
+                if (delta <= StartLineSize)
                 {
                     newCode.Add(line);
                     ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
                     continue;
                 }
 
-                if (i < 1)
+                var angle = 90.0;
+                if (FindOtherLines)
                 {
-                    newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
-                    continue;
-                }
-
-                var counter = -1;
-                var codeFounded = false;
-                var prevCommand = string.Empty;
-
-                while (counter + i >= 0)
-                {
-                    prevCommand = code[i + counter];
-                    if (!(prevCommand.StartsWith("G") || prevCommand.StartsWith("M")))
+                    if (i < 1)
                     {
-                        counter--;
+                        newCode.Add(line);
+                        ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
                         continue;
                     }
 
-                    if (prevCommand.StartsWith("G1"))
+                    var counter = -1;
+                    var codeFounded = false;
+                    var nextCommand = string.Empty;
+
+                    while (counter + i >= 0)
                     {
-                        codeFounded = true;
+                        nextCommand = code[i + counter].Trim(' ');
+                        if (!nextCommand.StartsWith("G"))
+                        {
+                            counter--;
+                            continue;
+                        }
+
+                        if (nextCommand.StartsWith("G1"))
+                        {
+                            var nextParts = nextCommand.Split(' ');
+                            if (nextParts.Any(p => p.StartsWith("E")))
+                            {
+                                codeFounded = true;
+                            }
+                        }
+
+                        break;
                     }
 
-                    break;
-                }
+                    if (!codeFounded)
+                    {
+                        newCode.Add(line);
+                        ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                        continue;
+                    }
 
-                if (!codeFounded)
+                    var newX = x;
+                    var newY = y;
+                    var newE = e;
+                    var newEndX = x;
+                    var newEndY = y;
+                    var newEndE = e;
+                    FindParam(code, i + counter + 1, ref newEndX, ref newEndY, ref newEndE, _useRelativeExtrusion);
+                    FindParam(code, i + counter, ref newX, ref newY, ref newE, _useRelativeExtrusion);
+
+
+                    if (newEndE - newE <= 0)
+                    {
+                        newCode.Add(line);
+                        ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                        continue;
+                    }
+
+                    var nextDeltaX = newEndX - newX;
+                    var nextDeltaY = newEndY - newY;
+                    var nextDelta = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+                    if (nextDelta <= 0)
+                    {
+                        newCode.Add(line);
+                        ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                        continue;
+                    }
+
+                    var sin = deltaX * nextDeltaY - nextDeltaX * deltaY;
+                    var cos = deltaX * nextDeltaX + deltaY * nextDeltaY;
+                    angle = Math.Atan2(sin, cos) * (180 / Math.PI);
+                    if (angle < 0)
+                    {
+                        angle += 180;
+                    }
+
+                    if (angle > 180)
+                    {
+                        angle -= 180;
+                    }
+                }
+                
+                var devider = (delta - EndLineSize) / delta;
+                if (devider <= 0)
                 {
                     newCode.Add(line);
                     ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
                     continue;
                 }
 
-                var partsToRem = prevCommand.Split(' ');
-                var eRemPart = partsToRem.FirstOrDefault(p => p.StartsWith("E"));
-
-                if (eRemPart == null)
-                {
-                    newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
-                    continue;
-                }
-
-                var devider = (delta - StartLineSize) / delta;
                 var newDeltaX = deltaX * devider;
                 var newDeltaY = deltaY * devider;
                 var startX = deltaX - newDeltaX;
                 var startY = deltaY - newDeltaY;
-                var newExtrusion = e * devider;
-                var startExtrusion = (e - newExtrusion) * StartLineCount;
+                var newExtrusion = extrusion * devider;
+                var oldExtrusion = extrusion - newExtrusion;
+                var endExtrusion = (extrusion - newExtrusion) * (1 - (1 - StartLineCount) * Math.Sin(angle / (180 / Math.PI)));
+                if (endExtrusion > oldExtrusion)
+                {
+                    newCode.Add(line);
+                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                    continue;
+                }
 
-                var startCode = $"G1 X{prevX + startX} Y{prevY + startY} E{prevE + startExtrusion}";
+                var startCode = $"G1 X{prevX + startX} Y{prevY + startY} E{prevE + endExtrusion}";
                 newCode.Add(startCode);
-
-                var cuttedLine = $"G1 X{prevX + newDeltaX + startX} Y{prevY + newDeltaY + startY} E{prevE + (_useRelativeExtrusion ? 0.0 : startExtrusion) + newExtrusion}";
-                newCode.Add(cuttedLine);
-
+                if (!_useRelativeExtrusion)
+                {
+                    var deltaCode = $"G92 E{prevE + oldExtrusion}";
+                    newCode.Add(deltaCode);
+                }
+                var endCode = $"G1 X{x} Y{y} E{e}";
+                newCode.Add(endCode);
                 
-
-                ParsePrevData(cuttedLine, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                prevX = x;
+                prevY = y;
+                prevE = _useRelativeExtrusion ? 0.0 : e;
             }
 
             return newCode;
@@ -363,80 +494,85 @@ namespace GCodeCorrector.ViewModels
                     continue;
                 }
 
-                if (i >= code.Length - 1)
+                var angle = 90.0;
+                if (FindOtherLines)
                 {
-                    newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
-                    continue;
-                }
-                
-                var counter = 1;
-                var codeFounded = false;
-                var nextCommand = string.Empty;
-
-                while (counter + i < code.Length)
-                {
-                    nextCommand = code[i + counter].Trim(' ');
-                    if (!nextCommand.StartsWith("G"))
+                    if (i >= code.Length - 1)
                     {
-                        counter++;
+                        newCode.Add(line);
+                        ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
                         continue;
                     }
 
-                    if (nextCommand.StartsWith("G1"))
+                    var counter = 1;
+                    var codeFounded = false;
+                    var nextCommand = string.Empty;
+
+                    while (counter + i < code.Length)
                     {
-                        var nextParts = nextCommand.Split(' ');
-                        if (nextParts.Any(p => p.StartsWith("E")))
+                        nextCommand = code[i + counter].Trim(' ');
+                        if (!nextCommand.StartsWith("G"))
                         {
-                            codeFounded = true;
+                            counter++;
+                            continue;
                         }
+
+                        if (nextCommand.StartsWith("G1"))
+                        {
+                            var nextParts = nextCommand.Split(' ');
+                            if (nextParts.Any(p => p.StartsWith("E")))
+                            {
+                                codeFounded = true;
+                            }
+                        }
+
+                        break;
                     }
 
-                    break;
+                    if (!codeFounded)
+                    {
+                        newCode.Add(line);
+                        ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                        continue;
+                    }
+
+                    var newX = x;
+                    var newY = y;
+                    var newE = e;
+
+                    ParsePrevData(nextCommand, ref newX, ref newY, ref newE, false);
+
+                    if (newE - e <= 0)
+                    {
+                        newCode.Add(line);
+                        ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                        continue;
+                    }
+
+                    var nextDeltaX = newX - x;
+                    var nextDeltaY = newY - y;
+                    var nextDelta = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+                    if (nextDelta <= 0)
+                    {
+                        newCode.Add(line);
+                        ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
+                        continue;
+                    }
+
+                    var sin = deltaX * nextDeltaY - nextDeltaX * deltaY;
+                    var cos = deltaX * nextDeltaX + deltaY * nextDeltaY;
+                    angle = Math.Atan2(sin, cos) * (180 / Math.PI);
+                    if (angle < 0)
+                    {
+                        angle += 180;
+                    }
+
+                    if (angle > 180)
+                    {
+                        angle -= 180;
+                    }
                 }
 
-                if (!codeFounded)
-                {
-                    newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
-                    continue;
-                }
-
-                var newX = prevX;
-                var newY = prevY;
-                var newE = prevE;
-
-                ParsePrevData(nextCommand, ref newX, ref newY, ref newE, false);
-
-                if (extrusion <= 0)
-                {
-                    newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
-                    continue;
-                }
-                var nextDeltaX = newX - x;
-                var nextDeltaY = newY - y;
-                var nextDelta = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
-                if (nextDelta <= EndLineSize)
-                {
-                    newCode.Add(line);
-                    ParsePrevData(line, ref prevX, ref prevY, ref prevE, _useRelativeExtrusion);
-                    continue;
-                }
-
-                var sin = deltaX * nextDeltaY - nextDeltaX * deltaY;
-                var cos = deltaX * nextDeltaX + deltaY * nextDeltaY;
-                var angle = Math.Atan2(sin, cos) * (180 / Math.PI);
-                if (angle < 0)
-                {
-                    angle += 180;
-                }
-
-                if (angle > 180)
-                {
-                    angle -= 180;
-                }
-                
                 var devider = (delta - EndLineSize) / delta;
                 if (devider <= 0)
                 {
