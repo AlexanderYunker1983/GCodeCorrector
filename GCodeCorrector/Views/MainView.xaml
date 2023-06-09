@@ -77,8 +77,5 @@
                 </StackPanel>
             </StackPanel>
         </GroupBox>
-        <CheckBox Grid.Row="4" Margin="0,11" IsChecked="{Binding UseRelativeExtrusion}" Content="{DataBinding '$i18n.UseRelativeExtrusion'}"></CheckBox>
-
-        
     </Grid>
 </infrastructure:PerMonitorDpiWindow>

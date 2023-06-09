@@ -194,14 +194,5 @@ namespace GCodeCorrector.Resources {
                 return ResourceManager.GetString("SuccessfullySaved", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to В исходном gcode используется относительное экструдирование.
-        /// </summary>
-        internal static string UseRelativeExtrusion {
-            get {
-                return ResourceManager.GetString("UseRelativeExtrusion", resourceCulture);
-            }
-        }
     }
 }

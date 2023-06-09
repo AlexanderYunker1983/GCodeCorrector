@@ -162,7 +162,4 @@
   <data name="SuccessfullySaved" xml:space="preserve">
     <value>Файл успешно сохранён</value>
   </data>
-  <data name="UseRelativeExtrusion" xml:space="preserve">
-    <value>В исходном gcode используется относительное экструдирование</value>
-  </data>
 </root>
