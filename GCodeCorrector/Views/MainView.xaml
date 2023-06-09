@@ -1,14 +1,16 @@
-﻿<Window x:Class="GCodeCorrector.Views.MainView"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:viewModels="clr-namespace:GCodeCorrector.ViewModels"
-        xmlns:fa5="http://schemas.fontawesome.com/icons/"
-        mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance viewModels:MainViewModel}"
-        Title="{DataBinding DisplayName}"
-        Height="450" Width="800">
+﻿<infrastructure:PerMonitorDpiWindow x:Class="GCodeCorrector.Views.MainView"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:viewModels="clr-namespace:GCodeCorrector.ViewModels"
+                     xmlns:fa5="http://schemas.fontawesome.com/icons/"
+                     xmlns:infrastructure="clr-namespace:GCodeCorrector.Infrastructure"
+                     mc:Ignorable="d"
+                     d:DataContext="{d:DesignInstance viewModels:MainViewModel}"
+                     Title="{DataBinding DisplayName}"
+                     WindowStartupLocation="CenterScreen"
+                     Height="450" Width="800" TextOptions.TextFormattingMode="Ideal">
     <Grid Margin="11">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -79,4 +81,4 @@
 
         
     </Grid>
-</Window>
+</infrastructure:PerMonitorDpiWindow>
