@@ -27,9 +27,9 @@ namespace GCodeCorrector.ViewModels
         private string _selectedFile;
         private string _selectedFileName;
         private double _endLineSize = 0.6;
-        private double _endLineCount = 0.7;
+        private double _endLineFlow = 0.7;
         private double _startLineSize = 0.5;
-        private double _startLineCount = 1.5;
+        private double _startLineFlow = 1.5;
         private bool _startLineEnabled = true;
         private bool _endLineEnabled = true;
         private bool _useRelativeExtrusion;
@@ -77,13 +77,13 @@ namespace GCodeCorrector.ViewModels
             }
         }
 
-        public double EndLineCount
+        public double EndLineFlow
         {
-            get => _endLineCount;
+            get => _endLineFlow;
             set
             {
-                if (value.Equals(_endLineCount)) return;
-                _endLineCount = value;
+                if (value.Equals(_endLineFlow)) return;
+                _endLineFlow = value;
                 OnPropertyChanged();
             }
         }
@@ -99,13 +99,13 @@ namespace GCodeCorrector.ViewModels
             }
         }
 
-        public double StartLineCount
+        public double StartLineFlow
         {
-            get => _startLineCount;
+            get => _startLineFlow;
             set
             {
-                if (value.Equals(_startLineCount)) return;
-                _startLineCount = value;
+                if (value.Equals(_startLineFlow)) return;
+                _startLineFlow = value;
                 OnPropertyChanged();
             }
         }
@@ -212,25 +212,32 @@ namespace GCodeCorrector.ViewModels
                 var endAngle = FindAngleInDegreesWithCorrection(gCodeLine, gCodeLine.NextCode);
 
                 var relativeE = gCodeLine.DeltaE / gCodeLine.Length;
-
-                var startLength = StartLineEnabled ? StartLineSize : 0.0;
-                var endLength = EndLineEnabled ? EndLineSize : 0.0;
+                var prevCode = gCodeLine.PrevCode;
+                var nextCode = gCodeLine.NextCode;
+                var enableStartPart = StartLineEnabled && prevCode != null && prevCode.HasExtrusion && prevCode.DeltaE > 0;
+                var enableEndPart = EndLineEnabled && nextCode != null && nextCode.HasExtrusion && nextCode.DeltaE > 0;
+                var startLength = enableStartPart ? StartLineSize : 0.0;
+                var endLength = enableEndPart ? EndLineSize : 0.0;
 
                 var startPart = startLength / gCodeLine.Length;
                 var endPart = endLength / gCodeLine.Length;
 
-                var startExtrusionInFile = startLength * relativeE;
-                var endExtrusionInFile = endLength * relativeE;
+                var startExtrusionInFile = enableStartPart ? startLength * relativeE : 0.0;
+                var endExtrusionInFile = enableEndPart ? endLength * relativeE : 0.0;
                 var mainExtrusion = gCodeLine.DeltaE - startExtrusionInFile - endExtrusionInFile;
 
-                var startExtrusion = startExtrusionInFile * (1 - (1 - StartLineCount) * Math.Sin(startAngle / (180 / Math.PI)));
-                var endExtrusion = endExtrusionInFile * (1 - (1 - StartLineCount) * Math.Sin(endAngle / (180 / Math.PI)));
+                var startExtrusion = enableStartPart ? startExtrusionInFile * (1 - (1 - StartLineFlow) * Math.Sin(startAngle / (180 / Math.PI))) : 0.0;
+                var endExtrusion = enableEndPart ? endExtrusionInFile * (1 - (1 - EndLineFlow) * Math.Sin(endAngle / (180 / Math.PI))) : 0.0;
 
                 gCodeLine.ModifiedLines = new List<GCodeLine>();
 
                 var prevState = gCodeLine.StartState;
+                if (_useRelativeExtrusion)
+                {
+                    prevState.E = 0.0;
+                }
 
-                if (StartLineEnabled)
+                if (enableStartPart)
                 {
                     var startLine = new GCodeLine
                     {
@@ -254,7 +261,10 @@ namespace GCodeCorrector.ViewModels
                             OriginalCode = $"G92 E{prevState.E}"
                         });
                     }
-
+                    else
+                    {
+                        prevState.E = 0.0;
+                    }
                 }
 
                 var mainLine = new GCodeLine
@@ -279,8 +289,12 @@ namespace GCodeCorrector.ViewModels
                         OriginalCode = $"G92 E{prevState.E}"
                     });
                 }
+                else
+                {
+                    prevState.E = 0.0;
+                }
 
-                if (EndLineEnabled)
+                if (enableEndPart)
                 {
                     var endLine = new GCodeLine
                     {
@@ -303,6 +317,10 @@ namespace GCodeCorrector.ViewModels
                         {
                             OriginalCode = $"G92 E{prevState.E}"
                         });
+                    }
+                    else
+                    {
+                        prevState.E = 0.0;
                     }
                 }
             }

@@ -55,9 +55,9 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
                     <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}"/>
-                    <Slider Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding StartLineCount}" VerticalAlignment="Center"
+                    <Slider Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding StartLineFlow}" VerticalAlignment="Center"
                             Margin="6,0" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
-                    <TextBlock VerticalAlignment="Center" Text="{Binding StartLineCount, StringFormat={}{0:F3}}"/>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding StartLineFlow, StringFormat={}{0:F3}}"/>
                 </StackPanel>
             </StackPanel>
         </GroupBox>
@@ -72,9 +72,9 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,6,0,0">
                     <TextBlock VerticalAlignment="Center" Text="{DataBinding '$i18n.EndLineCount'}"/>
-                    <Slider Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding EndLineCount}" VerticalAlignment="Center"
+                    <Slider Width="150" Minimum="0.0" Maximum="2.0" Value="{Binding EndLineFlow}" VerticalAlignment="Center"
                             Margin="6,0" TickFrequency="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
-                    <TextBlock VerticalAlignment="Center" Text="{Binding EndLineCount, StringFormat={}{0:F3}}"/>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding EndLineFlow, StringFormat={}{0:F3}}"/>
                 </StackPanel>
             </StackPanel>
         </GroupBox>
