@@ -203,14 +203,17 @@ namespace GCodeCorrector.ViewModels
                 return;
             }
             var dataWithCode = data.Where(d => d.IsCode).ToList();
-            foreach (var gCodeLine in dataWithCode)
+            GCodeLine prevCode = null;
+            GCodeLine nextCode = null;
+            for (var index = 0; index < dataWithCode.Count; index++)
             {
-                var prevCode = dataWithCode.LastOrDefault(d => d.LineNumber < gCodeLine.LineNumber);
-                var nextCode = dataWithCode.FirstOrDefault(d => d.LineNumber > gCodeLine.LineNumber);
+                var gCodeLine = dataWithCode[index];
+                nextCode = index < dataWithCode.Count - 1 ? dataWithCode[index + 1] : null;
                 gCodeLine.PrevCode = prevCode;
                 gCodeLine.NextCode = nextCode;
                 gCodeLine.PrevCodeHasExtrusion = prevCode != null && prevCode.HasExtrusion && prevCode.DeltaE > 0;
                 gCodeLine.NextCodeHasExtrusion = nextCode != null && nextCode.HasExtrusion && nextCode.DeltaE > 0;
+                prevCode = gCodeLine;
             }
 
             var dataWithExtrusion = dataWithCode.Where(d => d.HasExtrusion && d.DeltaE > 0).ToList();
@@ -226,8 +229,8 @@ namespace GCodeCorrector.ViewModels
                 var startAngle = FindAngleInDegreesWithCorrection(gCodeLine, gCodeLine.PrevCode);
                 var endAngle = FindAngleInDegreesWithCorrection(gCodeLine, gCodeLine.NextCode);
 
-                var prevCode = gCodeLine.PrevCode;
-                var nextCode = gCodeLine.NextCode;
+                prevCode = gCodeLine.PrevCode;
+                nextCode = gCodeLine.NextCode;
                 var enableStartPart = StartLineEnabled && prevCode != null && prevCode.HasExtrusion && prevCode.DeltaE > 0 && Math.Abs(startAngle) > float.Epsilon && Math.Abs(startAngle - 180) > float.Epsilon;
                 var enableEndPart = EndLineEnabled && nextCode != null && nextCode.HasExtrusion && nextCode.DeltaE > 0 && Math.Abs(endAngle) > float.Epsilon && Math.Abs(endAngle - 180) > float.Epsilon;
                 var startLength = enableStartPart ? StartLineSize : 0.0;
